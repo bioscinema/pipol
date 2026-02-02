@@ -1,0 +1,35 @@
+Package: RIPoL
+Type: Package
+Title: Tree-Aware Label Propagation for Microbiome Decontamination
+Version: 0.1.0
+Authors@R: 
+    person(given = "Zixu",
+           family = "Hao",
+           role = c("aut", "cre"),
+           email = "your_email@georgetown.edu")
+Description: 
+    Implements RIPoL (Robust Inference via Phylogeny-aware Label Propagation),
+    a tree-aware framework for identifying core, intermediate, and transient
+    taxa in microbiome studies. The method jointly models abundance-based
+    co-enrichment and prevalence-based co-existence using host?Ctaxon bipartite
+    graphs and phylogenetic kernel smoothing. RIPoL supports inverse probability
+    weighting to adjust for confounding and provides principled decontamination
+    via joint significance in weighted and unweighted propagation spaces.
+Depends:
+    R (>= 4.1.0)
+Imports:
+    phyloseq,
+    ape,
+    stats,
+    dplyr,
+    ggplot2
+Suggests:
+    knitr,
+    rmarkdown
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+VignetteBuilder: knitr
+
