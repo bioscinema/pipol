@@ -120,10 +120,14 @@
   thresh_w <- stats::qnorm(1 - gamma_weighted)
   thresh_u <- stats::qnorm(1 - gamma_unweighted)
   
-  category <- ifelse(
-    z_w > thresh_w & z_u > thresh_u, "High risk",
-    ifelse(z_w < -thresh_w & z_u < -thresh_u, "Low risk", "Medium risk")
-  )
+  category <- rep("Low risk", length(z_w))
+  
+  category[z_w > thresh_w & z_u > thresh_u] <- "High risk"
+  
+  category[
+    (z_w > thresh_w & z_u <= thresh_u) |
+      (z_w <= thresh_w & z_u > thresh_u)
+  ] <- "Medium risk"
   
   df <- data.frame(
     OTU = rownames(Rtree_weighted),
