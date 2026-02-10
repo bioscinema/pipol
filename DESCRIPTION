@@ -1,6 +1,6 @@
-Package: RIPoL
+Package: PIPoL
 Type: Package
-Title: Tree-Aware Label Propagation for Microbiome Decontamination
+Title: Propensity-weighted Influence Propagation of Labels in Host-Microbiome Interactive Network
 Version: 0.1.0
 Authors@R: 
     person(given = "Zixu",
@@ -8,11 +8,11 @@ Authors@R:
            role = c("aut", "cre"),
            email = "your_email@georgetown.edu")
 Description: 
-    Implements RIPoL (Robust Inference via Phylogeny-aware Label Propagation),
+    Implements PIPoL (Robust Inference via Phylogeny-aware Label Propagation),
     a tree-aware framework for identifying core, intermediate, and transient
     taxa in microbiome studies. The method jointly models abundance-based
-    co-enrichment and prevalence-based co-existence using host?Ctaxon bipartite
-    graphs and phylogenetic kernel smoothing. RIPoL supports inverse probability
+    co-enrichment and prevalence-based co-existence using host-taxon bipartite
+    graphs and phylogenetic kernel smoothing. PIPoL supports inverse probability
     weighting to adjust for confounding and provides principled decontamination
     via joint significance in weighted and unweighted propagation spaces.
 Depends:
