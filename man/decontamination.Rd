@@ -2,7 +2,7 @@
 % Please edit documentation in R/decontamination.r
 \name{decontamination}
 \alias{decontamination}
-\title{Tree-aware microbiome decontamination via RIPoL}
+\title{Tree-aware microbiome decontamination via PIPoL}
 \usage{
 decontamination(
   physeq,

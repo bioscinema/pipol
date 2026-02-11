@@ -1,5 +1,5 @@
 # ============================================================
-# RIPoL: Tree-aware decontamination via label propagation
+# PIPoL: Tree-aware decontamination via label propagation
 # ============================================================
 
 
@@ -39,9 +39,9 @@
 
 
 # ------------------------------------------------------------
-# Internal: RIPoL tree-aware label propagation
+# Internal: PIPoL tree-aware label propagation
 # ------------------------------------------------------------
-.ripol_tree_core <- function(
+.pipol_tree_core <- function(
     physeq,
     outcome_var,
     tau,
@@ -165,7 +165,7 @@
 # Public API
 # ------------------------------------------------------------
 
-#' Tree-aware microbiome decontamination via RIPoL
+#' Tree-aware microbiome decontamination via PIPoL
 #'
 #' Identifies core, intermediate, and transient taxa by jointly modeling
 #' prevalence-based co-existence and abundance-based co-enrichment using
@@ -200,7 +200,7 @@ decontamination <- function(
     alpha = alpha
   )
   
-  R_w <- .ripol_tree_core(
+  R_w <- .pipol_tree_core(
     physeq,
     outcome_var = outcome_var,
     tau = tau_val,
@@ -208,7 +208,7 @@ decontamination <- function(
     weighted = TRUE
   )
   
-  R_u <- .ripol_tree_core(
+  R_u <- .pipol_tree_core(
     physeq,
     outcome_var = outcome_var,
     tau = tau_val,

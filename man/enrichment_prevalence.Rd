@@ -2,14 +2,15 @@
 % Please edit documentation in R/enrichment_prevalence.r
 \name{enrichment_prevalence}
 \alias{enrichment_prevalence}
-\title{Enrichment–Prevalence Analysis}
+\title{Enrichment–Prevalence Analysis (Tree-aware)}
 \usage{
 enrichment_prevalence(
   physeq,
-  weighted_Rtree,
-  unweighted_Rtree,
-  group_var,
+  outcome_var,
   group,
+  tau_level = c("Genus", "Family", "Species"),
+  alpha = 0.05,
+  confounders = NULL,
   p_upper = 0.05,
   p_lower = 0.05,
   min_prevalence = 0,
@@ -20,35 +21,23 @@ enrichment_prevalence(
 \arguments{
 \item{physeq}{A phyloseq object.}
 
-\item{weighted_Rtree}{Weighted association matrix (features x groups).}
-
-\item{unweighted_Rtree}{Unweighted association matrix (features x groups).}
-
-\item{group_var}{Sample metadata variable defining groups.}
+\item{outcome_var}{Sample-level outcome variable.}
 
 \item{group}{Group level to analyze.}
+
+\item{tau_level}{Taxonomic level used for smoothing.}
+
+\item{alpha}{Significance level controlling tree decay scale.}
+
+\item{confounders}{Optional confounders for IPW.}
 
 \item{p_upper}{Upper-tail p-value cutoff for enrichment.}
 
 \item{p_lower}{Lower-tail p-value cutoff for depletion.}
 
-\item{min_prevalence}{Minimum prevalence required to retain a feature.}
-
-\item{vline}{Optional vertical cutoff for prevalence-abundance plot.}
-
-\item{hline}{Optional horizontal cutoff for prevalence-abundance plot.}
-}
-\value{
-A list containing:
-\itemize{
-\item table: data.frame with enrichment statistics
-\item plot_enrichment: co-existence vs co-enrichment Z-scores
-\item plot_prev_enrich: prevalence vs co-enrichment
-\item plot_abund_enrich: abundance vs co-enrichment
-\item plot_prev_abund: prevalence vs abundance
-}
+\item{min_prevalence}{Minimum prevalence required.}
 }
 \description{
 Perform group-wise co-enrichment and co-existence analysis
-with automatic handling of sparse and dense compositional data.
+using tree-aware PIPoL propagation.
 }
