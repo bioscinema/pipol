@@ -218,13 +218,3 @@ This wrapper adds:
 
 Thresholds (gamma, prevalence cutoffs) should be adjusted based on study design, sequencing depth, and availability of negative controls.
 
----
-
-## Citation
-
-If you use PIPoL in your work, please cite:
-
-Tree-aware label propagation for microbiome decontamination
-Manuscript in preparation
-
----
