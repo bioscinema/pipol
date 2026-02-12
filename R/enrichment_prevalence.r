@@ -96,71 +96,6 @@
 
 
 # ------------------------------------------------------------
-# Internal: Core / transient classification from Rtrees
-# ------------------------------------------------------------
-.decontam_from_rtrees <- function(
-    Rtree_weighted,
-    Rtree_unweighted,
-    label,
-    gamma_weighted,
-    gamma_unweighted,
-    physeq = NULL
-) {
-  stopifnot(
-    all(dim(Rtree_weighted) == dim(Rtree_unweighted)),
-    all(rownames(Rtree_weighted) == rownames(Rtree_unweighted))
-  )
-  
-  z_w <- scale(Rtree_weighted[, label])
-  z_u <- scale(Rtree_unweighted[, label])
-  
-  p_w <- stats::pnorm(z_w, lower.tail = FALSE)
-  p_u <- stats::pnorm(z_u, lower.tail = FALSE)
-  
-  thresh_w <- stats::qnorm(1 - gamma_weighted)
-  thresh_u <- stats::qnorm(1 - gamma_unweighted)
-  
-  category <- rep("Low risk", length(z_w))
-  
-  category[z_w > thresh_w & z_u > thresh_u] <- "High risk"
-  
-  category[
-    (z_w > thresh_w & z_u <= thresh_u) |
-      (z_w <= thresh_w & z_u > thresh_u)
-  ] <- "Medium risk"
-  
-  df <- data.frame(
-    OTU = rownames(Rtree_weighted),
-    CoexistZ = z_u,
-    CoenrichZ = z_w,
-    Category = factor(category,
-                      levels = c("High risk", "Medium risk", "Low risk"))
-  )
-  
-  p_scatter <- ggplot2::ggplot(
-    df,
-    ggplot2::aes(x = CoexistZ, y = CoenrichZ,
-                 color = Category, shape = Category)
-  ) +
-    ggplot2::geom_point(alpha = 0.8, size = 2.2) +
-    ggplot2::theme_classic(base_size = 14) +
-    ggplot2::scale_color_manual(
-      values = c("High risk" = "#D7263D",
-                 "Medium risk" = "gray70",
-                 "Low risk" = "#1E90FF")
-    ) +
-    ggplot2::labs(
-      x = "Coexistence Z score",
-      y = "Co-enrichment Z score"
-    )
-  
-  list(
-    table = df,
-    plot = p_scatter
-  )
-}
-
-# ------------------------------------------------------------
 # Public API
 # ------------------------------------------------------------
 
@@ -321,16 +256,97 @@ enrichment_prevalence <- function(
     Transient = "#1E90FF"
   )
   
-  p_enrich <- ggplot2::ggplot(
-    df,
-    ggplot2::aes(Unweighted_z, Weighted_z, color = Category)
-  ) +
-    ggplot2::geom_point(size = 2) +
-    ggplot2::theme_classic()
-  
-  list(
-    table = df,
-    plot_enrichment = p_enrich,
-    tau = tau_val
+  shape_map <- c(
+    Core = 17,
+    Intermediate = 16,
+    Transient = 15
   )
+  
+  # 1️⃣ Z vs Z
+  p1 <- ggplot2::ggplot(
+    df,
+    ggplot2::aes(Unweighted_z, Weighted_z,
+                 color = Category,
+                 shape = Category)
+  ) +
+    ggplot2::geom_point(alpha = 0.8, size = 2.2) +
+    ggplot2::scale_color_manual(values = color_map, drop = FALSE) +
+    ggplot2::scale_shape_manual(values = shape_map, drop = FALSE) +
+    ggplot2::theme_classic(base_size = 14) +
+    ggplot2::labs(
+      x = "Coexist Z Score",
+      y = "Coenrichment Z Score"
+    )
+  
+  # 2️⃣ Prevalence vs Coenrichment
+  p2 <- ggplot2::ggplot(
+    df,
+    ggplot2::aes(Prevalence, Weighted_z)
+  ) +
+    ggplot2::geom_point(color = "gray30",
+                        alpha = 0.7,
+                        size = 2) +
+    ggplot2::theme_classic(base_size = 14) +
+    ggplot2::labs(
+      x = "Prevalence",
+      y = "Coenrichment Z Score"
+    )
+  
+  # 3️⃣ Mean abundance vs Coenrichment
+  p3 <- ggplot2::ggplot(
+    df,
+    ggplot2::aes(Mean_abundance, Weighted_z)
+  ) +
+    ggplot2::geom_point(color = "gray30",
+                        alpha = 0.7,
+                        size = 2) +
+    ggplot2::theme_classic(base_size = 14) +
+    ggplot2::labs(
+      x = "Mean Relative Abundance",
+      y = "Coenrichment Z Score"
+    )
+  
+  # 4️⃣ Prevalence vs Mean abundance
+  p4 <- ggplot2::ggplot(
+    df,
+    ggplot2::aes(Prevalence, Mean_abundance,
+                 color = Category,
+                 shape = Category)
+  ) +
+    ggplot2::geom_point(alpha = 0.8, size = 2.2) +
+    ggplot2::scale_color_manual(values = color_map, drop = FALSE) +
+    ggplot2::scale_shape_manual(values = shape_map, drop = FALSE) +
+    ggplot2::theme_classic(base_size = 14) +
+    ggplot2::labs(
+      x = "Prevalence",
+      y = "Mean Relative Abundance"
+    )
+  
+  if (!is.null(vline)) {
+    p4 <- p4 +
+      ggplot2::geom_vline(
+        xintercept = vline,
+        linetype = "dashed",
+        color = "gray50"
+      )
+  }
+  
+  if (!is.null(hline)) {
+    p4 <- p4 +
+      ggplot2::geom_hline(
+        yintercept = hline,
+        linetype = "dashed",
+        color = "gray50"
+      )
+  }
+  
+  return(list(
+    table = df,
+    plot_enrichment = p1,
+    plot_prev_enrich = p2,
+    plot_abund_enrich = p3,
+    plot_prev_abund = p4,
+    tau = tau_val
+  ))
+  
 }
