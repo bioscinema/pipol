@@ -1,0 +1,54 @@
+
+```{r}
+library(phyloseq)
+library(dplyr)
+library(PIPoL)
+
+load("../Real_Data/ibd_16s_negative.RData")
+
+otu_matrix <- as(physeq@otu_table, "matrix")
+sample.names <- colnames(as.data.frame(otu_matrix))
+
+NC <- ifelse(grepl("blank", sample.names, ignore.case = TRUE),
+             "Control",
+             "Biological")
+
+metadata <- data.frame(sampleID = sample.names, NC = NC)
+rownames(metadata) <- metadata$sampleID
+metadata$sampleID <- NULL
+
+sample_data(physeq) <- sample_data(metadata)
+```
+
+```{r}
+
+decon_res <- decontamination(
+  physeq = physeq,
+  outcome_var = "NC",
+  label = "Control",
+  tau = "Genus",
+  alpha = 0.05,
+  gamma_weighted = 0.05,
+  gamma_unweighted = 0.05
+)
+
+decon_res$plot
+
+```
+
+
+```{r}
+enrich_res <- enrichment_prevalence(
+  physeq = physeq,
+  outcome_var = "NC",
+  group = "Control",
+  tau_level = "Genus",
+  alpha = 0.05,
+  min_prevalence = 0.05
+)
+enrich_res$plot_enrichment
+enrich_res$plot_prev_enrich
+enrich_res$plot_abund_enrich
+enrich_res$plot_prev_abund
+
+```
