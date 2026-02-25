@@ -79,35 +79,25 @@ plot_reference_scatter <- function(
       df$.facet_prevalence <- factor(prev)
     }
   }
-  
   # --------------------------------------------------
   # Build plot
   # --------------------------------------------------
+
+  has_abundance <- !is.null(abundance_col) && (abundance_col %in% colnames(df))
+  
   p <- ggplot2::ggplot(
     df,
     ggplot2::aes(
       x = .data[[score_x]],
       y = .data[[score_y]],
-      color = .data[[group_col]],
-      size = if (abundance_col %in% colnames(df)) .data[[abundance_col]] else NULL
+      color = .data[[group_col]]
     )
-  ) +
-    ggplot2::geom_point(alpha = alpha) +
-    ggplot2::scale_color_manual(
-      values = palette,
-      name = "Reference\nClassification"
-    ) +
-    ggplot2::labs(
-      x = paste0("Score (", score_x, ")"),
-      y = paste0("Score (", score_y, ")")
-    ) +
-    ggplot2::guides(size = "none") +
-    ggplot2::theme_classic(base_size = 14)
+  )
   
-  if (facet && ".facet_prevalence" %in% colnames(df)) {
-    p <- p + ggplot2::facet_grid(
-      stats::as.formula("~ .facet_prevalence")
-    )
+  if (has_abundance) {
+    p <- p + ggplot2::geom_point(ggplot2::aes(size = .data[[abundance_col]]), alpha = alpha)
+  } else {
+    p <- p + ggplot2::geom_point(alpha = alpha, size = 1.5)
   }
   
   return(p)

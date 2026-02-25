@@ -1,0 +1,200 @@
+```{r}
+library(PIPoL)
+library(phyloseq)
+library(dplyr)
+library(stringr)
+library(decontam)
+library(ggplot2)
+
+load("../Real_Data/oral_16S_neg.RData")
+```
+
+
+
+```{r}
+samples <- sample_names(physeq)
+parts <- str_split_fixed(samples, "\\.", 4)
+label <- ifelse(str_detect(tolower(parts[, 2]), "blank"), "blank",
+                ifelse(str_detect(tolower(parts[, 3]), "salb"), "salb", "other"))
+sample_data(physeq)$GroupLabel <- label
+
+tax <- as(tax_table(physeq), "matrix")
+keep <- !is.na(tax[, "Genus"])
+physeq <- prune_taxa(keep, physeq)
+
+physeq@sam_data$is.neg <- ifelse(physeq@sam_data$GroupLabel == "blank", 1, 0)
+```
+
+```{r}
+
+contam_database <- read.csv("../Real_Data/contamination_database.csv")
+oral_database <- read.csv("../Real_Data/oral_database.csv")
+HOMD <- read.csv("../Real_Data/homd_taxonomy_table.csv")
+
+oral_cult <- unique(HOMD$Genus[HOMD$Status %in% c('Named','Unnamed')])
+oral_vis <- unique(oral_database$Genus)
+oral <- unique(c(oral_cult, oral_vis))
+
+contam_df <- contam_database %>%
+  group_by(Genus) %>%
+  mutate(numberstudies = length(unique(Reference))) %>%
+  as.data.frame()
+contam <- unique(contam_df$Genus)
+
+core_res <- decontamination(
+    physeq = physeq,
+    outcome_var = "GroupLabel",
+    label = "blank",
+    tau = "Genus",
+    alpha = 0.05,
+    gamma_weighted = 0.1,
+    gamma_unweighted = 0.1
+)
+
+tt <- core_res$table 
+
+tt$TAXprev <- rowSums(otu_table(physeq) > 0)[match(tt$OTU, taxa_names(physeq))]
+tt$TAXsums <- taxa_sums(physeq)[match(tt$OTU, taxa_names(physeq))]
+tax_df <- as.data.frame(tax_table(physeq))
+tt$Genus <- tax_df$Genus[match(tt$OTU, rownames(tax_df))]
+
+tt$Group <- "Ambiguous"
+tt$Group[tt$Genus %in% oral & !tt$Genus %in% contam] <- "Oral"
+tt$Group[tt$Genus %in% contam & !tt$Genus %in% oral] <- "Contaminant"
+
+tt$Prevalence_Group <- cut(as.numeric(tt$TAXprev), 
+                           breaks = c(-Inf, 2, 5, 10, Inf), 
+                           labels = c("2", "3-5", "6-10", "11+"))
+
+p_ref <- plot_reference_scatter(
+  results_df = tt,
+  score_x = "CoexistZ",
+  score_y = "CoenrichZ", 
+  group_col = "Group",
+  abundance_col = "TAXsums", 
+  prevalence_col = "Prevalence_Group",
+  facet = TRUE,
+  prevalence_bins = NULL,
+  alpha = 0.5
+) 
+
+p_ref <- p_ref + 
+
+  ggplot2::facet_grid(~Prevalence_Group) + 
+  
+  ggplot2::scale_size_area(max_size = 12) + 
+  
+  ggplot2::scale_color_manual(
+    values = c("Oral" = "blue", "Contaminant" = "red", "Ambiguous" = "gray80"),
+    name = "Reference\nClassification"
+  ) +
+  
+  ggplot2::labs(x = "Score (Coexists Z-score)", y = "Score (Coenrich Z-score)") +
+  ggplot2::theme_light() +
+  ggplot2::theme(
+    strip.background = element_rect(fill = "gray90"),
+    strip.text = element_text(color = "black", face = "bold", size = 11)
+  ) +
+  ggplot2::guides(color = guide_legend(override.aes = list(size = 4, alpha = 1)), size = "none")
+
+print(p_ref)
+```
+
+```{r}
+
+tt$CoexistProb <- pnorm(tt$CoexistZ)
+tt$CoenrichProb <- pnorm(tt$CoenrichZ)
+
+p_ref <- plot_reference_scatter(
+  results_df = tt,
+  score_x = "CoexistProb",
+  score_y = "CoenrichProb", 
+  group_col = "Group",
+  abundance_col = "TAXsums",
+  prevalence_col = "Prevalence_Group",
+  facet = TRUE,
+  prevalence_bins = NULL,
+  n_prevalence_bins = NULL,
+  alpha = 0.5
+) 
+
+p_ref <- p_ref + 
+
+  ggplot2::facet_grid(~Prevalence_Group) + 
+  
+  ggplot2::scale_size_area(max_size = 10) + 
+  
+  ggplot2::scale_x_continuous(breaks = seq(0, 1, 0.25), limits = c(0, 1)) +
+  ggplot2::scale_y_continuous(breaks = seq(0, 1, 0.25), limits = c(0, 1)) +
+  
+  ggplot2::scale_color_manual(
+    values = c("Oral" = "blue", "Contaminant" = "red", "Ambiguous" = "gray80"),
+    name = "Reference\nClassification"
+  ) +
+  ggplot2::labs(x = "Score (Coexists)", y = "Score (Coenrich)") +
+  
+  ggplot2::theme_light() +
+  ggplot2::theme(
+    strip.background = element_rect(fill = "gray90"),
+    strip.text = element_text(color = "black", face = "bold", size = 11),
+    panel.grid.minor = element_line(color = "white")
+  ) +
+  ggplot2::guides(
+    color = guide_legend(override.aes = list(size = 4, alpha = 1)),
+    size = "none"
+  )
+
+print(p_ref)
+```
+
+
+```{r}
+# --- 1. 还原原始脚本的 Z -> P 转换逻辑 ---
+# 原始脚本认为分数越小越像污染物，所以我们取单尾概率
+tt$coexists.p <- stats::pnorm(tt$CoexistZ, lower.tail = FALSE)
+tt$coenrich.p <- stats::pnorm(tt$CoenrichZ, lower.tail = FALSE)
+
+# --- 2. 流行度分箱 (严格对齐原图的 2, 3-5, 6-10, 11+) ---
+tt$Prevalence_Group <- cut(
+  as.numeric(tt$TAXprev), 
+  breaks = c(0, 2, 5, 10, Inf), 
+  labels = c("2", "3-5", "6-10", "11+")
+)
+
+# --- 3. 绘图调用 ---
+p_ref <- plot_reference_scatter(
+  results_df = tt,
+  score_x = "coexists.p", 
+  score_y = "coenrich.p",
+  group_col = "Group",
+  abundance_col = "TAXsums", 
+  prevalence_col = "Prevalence_Group",
+  facet = TRUE,
+  alpha = 0.5
+) 
+
+# --- 4. 样式深度对齐 (还原 Fig A 的质感) ---
+p_ref <- p_ref + 
+  ggplot2::facet_grid(~Prevalence_Group) +
+  # 调整点的大小，确保高丰度属（Genus）是大球
+  ggplot2::scale_size_area(max_size = 12) + 
+  # 恢复 0-1 坐标轴
+  ggplot2::scale_x_continuous(breaks = seq(0, 1, 0.25), limits = c(0, 1)) +
+  ggplot2::scale_y_continuous(breaks = seq(0, 1, 0.25), limits = c(0, 1)) +
+  # 颜色方案
+  ggplot2::scale_color_manual(
+    values = c("Oral" = "blue", "Contaminant" = "red", "Ambiguous" = "gray80"),
+    name = "Reference\nClassification"
+  ) +
+  ggplot2::labs(x = "Score (Coexists)", y = "Score (Coenrich)") +
+  # 使用 light 主题配合网格线
+  ggplot2::theme_light() +
+  ggplot2::theme(
+    strip.background = element_rect(fill = "gray90"),
+    strip.text = element_text(color = "black", face = "bold"),
+    panel.grid.minor = element_line(color = "white")
+  ) +
+  ggplot2::guides(color = guide_legend(override.aes = list(size = 4, alpha = 1)), size = "none")
+
+print(p_ref)
+```
