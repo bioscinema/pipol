@@ -85,7 +85,7 @@ tau_lib <- BTS(physeq)
 
 ---
 
-### 3. Run tree-aware label propagation
+### 3. Run tree-aware label propagation (is embedded in each functions)
 
 Abundance-weighted (co-enrichment):
 
@@ -115,12 +115,14 @@ Rtree_unweighted <- PIPoL_tree(
 
 ```r
 res <- decontamination(
-  Rtree_weighted,
-  Rtree_unweighted,
-  gamma_weighted = 0.1,
-  gamma_unweighted = 0.1,
-  physeq = physeq,
-  label = "blank"
+    physeq,
+    outcome_var,
+    label,
+    tau = c("Genus", "Family", "Species"),
+    alpha = 0.05,
+    gamma_weighted = 0.05,
+    gamma_unweighted = 0.05,
+    confounders = NULL
 )
 ```
 
