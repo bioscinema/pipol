@@ -163,6 +163,29 @@ This function provides a generic, method-level characterization of how PIPoL enr
 
 ---
 
+## Power Analysis
+
+```r
+plot_reference_scatter(
+    results_df,
+    score_x = "coexists.p",
+    score_y = "coenrich.p",
+    group_col = "Group",
+    abundance_col = "Abundance",
+    prevalence_col = "Prevalence",
+    facet = TRUE,
+    prevalence_bins = NULL,
+    n_prevalence_bins = NULL,
+    palette = c(
+      "Oral" = "blue",
+      "Contaminant" = "red",
+      "Ambiguous" = "gray80"
+    ),
+    alpha = 0.3
+)
+```
+
+---
 
 ## Notes on Interpretation
 
