@@ -77,37 +77,11 @@ physeq
 
 ---
 
-### 2. Estimate tree smoothing parameter
-
-```r
-tau_lib <- BTS(physeq)
-```
+### 2. Estimate tree smoothing parameter (is embedded in each functions)
 
 ---
 
 ### 3. Run tree-aware label propagation (is embedded in each functions)
-
-Abundance-weighted (co-enrichment):
-
-```r
-Rtree_weighted <- PIPoL_tree(
-  physeq,
-  outcome_var = "GroupLabel",
-  tau = tau_lib,
-  weighted = TRUE
-)
-```
-
-Presence/absence (co-existence):
-
-```r
-Rtree_unweighted <- PIPoL_tree(
-  physeq,
-  outcome_var = "GroupLabel",
-  tau = tau_lib,
-  weighted = FALSE
-)
-```
 
 ---
 
