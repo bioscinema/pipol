@@ -22,7 +22,7 @@ The method integrates **co-existence (presence/absence)** and **co-enrichment (a
 Install the development version from GitHub:
 
 ```r
-remotes::install_github("yourname/PIPoL")
+remotes::install_github("bioscinema/PIPoL")
 ```
 
 Load the package:
@@ -162,13 +162,18 @@ res$scatter_plot
 ### Core function (method-level)
 
 ```r
-compute_enrichment_prevalence(
-  physeq,
-  weighted_Rtree,
-  unweighted_Rtree,
-  group_variable = "GroupLabel",
-  mode = "within",
-  group1 = "blank"
+enrichment_prevalence(
+    physeq,
+    outcome_var,
+    group,
+    tau_level = c("Genus", "Family", "Species"),
+    alpha = 0.05,
+    confounders = NULL,
+    p_upper = 0.05,
+    p_lower = 0.05,
+    min_prevalence = 0,
+    vline = NULL,
+    hline = NULL
 )
 ```
 
@@ -182,31 +187,6 @@ This function provides a generic, method-level characterization of how PIPoL enr
 
 ---
 
-### IBD-specific wrapper (application-level)
-
-For sparse negative-control settings (e.g. IBD blanks), PIPoL provides a domain-specific wrapper:
-
-```r
-compute_enrichment_vs_prevalence_ibd(
-  physeq,
-  weighted_Rtree,
-  unweighted_Rtree,
-  groupvariable = "GroupLabel",
-  group1 = "blank"
-)
-```
-
-This wrapper adds:
-
-- strict prevalence filtering
-
-- defensive handling of zero inflation
-
-- risk-oriented classification (High / Medium / Low risk)
-
-- publication-ready visualizations
-
----
 
 ## Notes on Interpretation
 
